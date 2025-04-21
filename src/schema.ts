@@ -16,13 +16,22 @@ export const BookSchema = z.object({
   title: z.string().min(1),
   author: z.string().min(1),
   totalPages: z.number().int().positive(),
-  coverUrl: z.string().url().optional(),
+  coverUrl: z.union([z.string().url(), z.string().length(0)]).optional(),
   startDate: z.string().date().optional(),
-  completed: z.boolean().default(false),
+  description: z.string().max(1000).optional(),
+  completed: z.boolean().default(false).optional(),
   createdAt: z.string().datetime(),
 });
 
 export type Book = z.infer<typeof BookSchema>;
+
+export const BookFormSchema = BookSchema.omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
+export type BookFormValues = z.infer<typeof BookFormSchema>;
 
 export const ReadingProgressSchema = z.object({
   id: z.string().uuid(),
