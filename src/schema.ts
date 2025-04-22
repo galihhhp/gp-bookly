@@ -18,7 +18,7 @@ export const BookSchema = z.object({
   totalPages: z.number().int().positive(),
   coverUrl: z.union([z.string().url(), z.string().length(0)]).optional(),
   startDate: z.string().date().optional(),
-  description: z.string().max(1000).optional(),
+  description: z.string().max(2000).optional(),
   completed: z.boolean().default(false).optional(),
   createdAt: z.string().datetime(),
 });
@@ -52,3 +52,18 @@ export const RatingSchema = z.object({
 });
 
 export type Rating = z.infer<typeof RatingSchema>;
+
+export const BookNoteSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  bookId: z.string().uuid(),
+  pageNumber: z.number().int().positive(),
+  content: z.string(),
+  highlightText: z.string().optional(),
+  highlightColor: z.string().optional(),
+  isHighlight: z.boolean().default(false),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export type BookNote = z.infer<typeof BookNoteSchema>;

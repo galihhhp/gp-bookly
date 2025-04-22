@@ -1,14 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { StarRating } from "./star-rating";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { rateBookAction } from "@/app/actions/rating-actions";
-import { useRouter } from "next/navigation";
 import { Rating } from "@/schema";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import {
@@ -19,13 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-const formSchema = z.object({
-  rating: z.number().min(1, "Please select a rating"),
-  note: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { useBookRating } from "@/hooks/use-book-rating";
 
 type BookRatingProps = {
   bookId: string;
@@ -33,45 +21,10 @@ type BookRatingProps = {
 };
 
 export const BookRating = ({ bookId, existingRating }: BookRatingProps) => {
-  const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-  const router = useRouter();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      rating: existingRating?.rating || 0,
-      note: existingRating?.note || "",
-    },
-  });
-
-  const onSubmit = (values: FormValues) => {
-    setFeedback(null);
-
-    startTransition(async () => {
-      const result = await rateBookAction({
-        bookId,
-        rating: values.rating,
-        note: values.note?.trim() || undefined,
-      });
-
-      if (result.success) {
-        setFeedback({
-          type: "success",
-          message: "Your rating has been saved successfully.",
-        });
-        router.refresh();
-      } else {
-        setFeedback({
-          type: "error",
-          message: result.error || "Failed to save rating",
-        });
-      }
-    });
-  };
+  const { form, feedback, isPending, onSubmit, clearFeedback } = useBookRating(
+    bookId,
+    existingRating
+  );
 
   return (
     <div className="mt-8">
@@ -103,11 +56,11 @@ export const BookRating = ({ bookId, existingRating }: BookRatingProps) => {
                 <FormLabel>Your Rating</FormLabel>
                 <FormControl>
                   <StarRating
-                    defaultRating={field.value}
+                    value={field.value}
                     size="lg"
                     onChange={(newRating) => {
                       field.onChange(newRating);
-                      setFeedback(null);
+                      clearFeedback();
                     }}
                     className="py-2"
                     disabled={isPending}
@@ -132,7 +85,7 @@ export const BookRating = ({ bookId, existingRating }: BookRatingProps) => {
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
-                      setFeedback(null);
+                      clearFeedback();
                     }}
                   />
                 </FormControl>
@@ -143,7 +96,7 @@ export const BookRating = ({ bookId, existingRating }: BookRatingProps) => {
 
           <Button
             type="submit"
-            disabled={isPending || form.getValues("rating") === 0}>
+            disabled={isPending || form.watch("rating") === 0}>
             {isPending
               ? "Saving..."
               : existingRating

@@ -1,13 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Book, ReadingProgress, Rating } from "@/schema";
-import {
-  deleteBookAction,
-  markBookCompletedAction,
-} from "@/app/actions/book-actions";
-import ROUTES from "@/lib/constants/routes";
+import { Book, ReadingProgress, Rating, BookNote } from "@/schema";
 import { BookCover } from "./book-cover";
 import { ReadingProgressBar } from "./reading-progress-bar";
 import { ReadingProgressForm } from "./reading-progress-form";
@@ -18,64 +11,31 @@ import { CompletionButton } from "./completion-button";
 import { ErrorDisplay } from "../../ui/error-display";
 import { BookActions } from "./book-actions";
 import { BookRating } from "./book-rating";
+import { BookNotes } from "./book-notes";
+import { useBookDetail } from "@/hooks/use-book-detail";
 
 type BookDetailProps = {
   book: Book;
   latestProgress?: ReadingProgress | null;
   bookRating?: Rating | null;
+  notes?: BookNote[];
 };
 
-export const BookDetail = ({ book, latestProgress, bookRating }: BookDetailProps) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isUpdating, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const progressPercentage = book.completed
-    ? 100
-    : latestProgress && book.totalPages > 0
-    ? Math.min(
-        100,
-        Math.round((latestProgress.lastPageRead / book.totalPages) * 100)
-      ) || 1
-    : 0;
-
-  const formattedStartDate = book.startDate
-    ? new Date(book.startDate).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Not started";
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await deleteBookAction(book.id);
-      router.push(ROUTES.BOOK.LIST);
-      router.refresh();
-    } catch (error) {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleMarkCompleted = async () => {
-    setError(null);
-
-    startTransition(async () => {
-      try {
-        const result = await markBookCompletedAction(book.id);
-
-        if (!result.success) {
-          setError(result.error || "Failed to mark as completed");
-        } else {
-          router.refresh();
-        }
-      } catch (err) {
-        setError("An unexpected error occurred");
-      }
-    });
-  };
+export const BookDetail = ({
+  book,
+  latestProgress,
+  bookRating,
+  notes = [],
+}: BookDetailProps) => {
+  const {
+    isDeleting,
+    isUpdating,
+    error,
+    progressPercentage,
+    formattedStartDate,
+    handleDelete,
+    handleMarkCompleted,
+  } = useBookDetail(book, latestProgress);
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -120,6 +80,12 @@ export const BookDetail = ({ book, latestProgress, bookRating }: BookDetailProps
         />
 
         <BookDescription description={book.description} />
+
+        <BookNotes
+          bookId={book.id}
+          notes={notes}
+          latestPage={latestProgress?.lastPageRead}
+        />
 
         {book.completed && (
           <BookRating bookId={book.id} existingRating={bookRating} />

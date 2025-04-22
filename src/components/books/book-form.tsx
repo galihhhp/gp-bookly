@@ -1,11 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { BookFormSchema, BookFormValues } from "@/schema";
-import { createBookAction, updateBookAction } from "@/app/actions/book-actions";
+import { BookFormValues } from "@/schema";
 import {
   Form,
   FormField,
@@ -21,6 +16,16 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import ROUTES from "@/lib/constants/routes";
 import Link from "next/link";
+import { useBookForm } from "@/hooks/use-book-form";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type BookFormProps = {
   initialData?: Partial<BookFormValues>;
@@ -33,58 +38,12 @@ export const BookForm = ({
   bookId,
   description,
 }: BookFormProps) => {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const form = useForm<BookFormValues>({
-    resolver: zodResolver(BookFormSchema),
-    defaultValues: {
-      title: initialData.title || "",
-      author: initialData.author || "",
-      totalPages: initialData.totalPages || 1,
-      coverUrl: initialData.coverUrl || "",
-      startDate: initialData.startDate || "",
-      description: initialData.description || "",
-      completed: initialData.completed ?? false,
-    },
-  });
-
-  const defaultDescription = bookId
-    ? "Update your book details below."
-    : "Add a new book to your collection.";
-
-  const handleSubmit = (formData: BookFormValues) => {
-    setError(null);
-
-    startTransition(async () => {
-      try {
-        if (bookId) {
-          const result = await updateBookAction(bookId, formData);
-          if (result.success) {
-            router.push(ROUTES.BOOK.LIST);
-            router.refresh();
-          } else {
-            setError(result.error || "Failed to update book");
-          }
-        } else {
-          const result = await createBookAction(formData);
-          if (result.success) {
-            router.push(ROUTES.BOOK.LIST);
-            router.refresh();
-          } else {
-            setError(result.error || "Failed to create book");
-          }
-        }
-      } catch (err) {
-        setError("An unexpected error occurred. Please try again.");
-      }
-    });
-  };
+  const { form, isPending, error, handleSubmit, defaultDescription } =
+    useBookForm(initialData, bookId);
 
   return (
-    <div className="flex gap-4 max-w-4xl mx-auto mt-8">
-      <div className="flex flex-col gap-4 w-1/2">
+    <div className="flex flex-col md:flex-row gap-4 max-w-4xl mx-auto mt-8">
+      <div className="flex flex-col gap-4 w-full md:w-1/2">
         <Link href={bookId ? ROUTES.BOOK.DETAIL(bookId) : ROUTES.BOOK.LIST}>
           <Button variant="outline">
             ← {bookId ? "Back to Book" : "Back to Books"}
@@ -96,7 +55,7 @@ export const BookForm = ({
         <p>{description || defaultDescription}</p>
       </div>
       <Card className="flex-1">
-        <CardContent>
+        <CardContent className="pt-6">
           {error && (
             <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
               {error}
@@ -183,16 +142,43 @@ export const BookForm = ({
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="startDate">Start Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        {...field}
-                        aria-invalid={!!form.formState.errors.startDate}
-                      />
-                    </FormControl>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            aria-invalid={!!form.formState.errors.startDate}>
+                            {field.value ? (
+                              format(new Date(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            field.value ? new Date(field.value) : undefined
+                          }
+                          onSelect={(date) =>
+                            field.onChange(
+                              date ? format(date, "yyyy-MM-dd") : ""
+                            )
+                          }
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -204,13 +190,18 @@ export const BookForm = ({
                   <FormItem>
                     <FormLabel htmlFor="description">Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        id="description"
-                        placeholder="Enter a brief description of the book (optional)"
-                        className="min-h-[100px]"
-                        {...field}
-                        aria-invalid={!!form.formState.errors.description}
-                      />
+                      <div className="relative">
+                        <Textarea
+                          id="description"
+                          placeholder="Enter a brief description of the book (optional)"
+                          className="min-h-[100px]"
+                          {...field}
+                          aria-invalid={!!form.formState.errors.description}
+                        />
+                        <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
+                          {field.value?.length || 0}/2000
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

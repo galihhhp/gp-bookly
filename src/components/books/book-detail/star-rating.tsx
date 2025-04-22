@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type StarRatingProps = {
   defaultRating?: number;
+  value?: number;
   totalStars?: number;
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
@@ -16,14 +17,17 @@ type StarRatingProps = {
 
 export const StarRating = ({
   defaultRating = 0,
+  value,
   totalStars = 5,
   size = "md",
   disabled = false,
   onChange,
   className,
 }: StarRatingProps) => {
-  const [rating, setRating] = useState(defaultRating);
+  const [internalRating, setInternalRating] = useState(defaultRating);
   const [hoverRating, setHoverRating] = useState(0);
+
+  const rating = value !== undefined ? value : internalRating;
 
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -36,10 +40,8 @@ export const StarRating = ({
   const handleClick = (selectedRating: number) => {
     if (disabled) return;
 
-    const newRating = rating === selectedRating ? 0 : selectedRating;
-
-    setRating(newRating);
-    onChange?.(newRating);
+    setInternalRating(selectedRating);
+    onChange?.(selectedRating);
   };
 
   return (
