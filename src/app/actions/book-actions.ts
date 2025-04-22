@@ -2,8 +2,21 @@
 
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
-import { BookFormValues } from "@/schema";
+import { BookFormValues, Book } from "@/schema";
 import ROUTES from "@/lib/constants/routes";
+
+const transformBookData = (book: any): Book => ({
+  id: book.id,
+  userId: book.user_id,
+  title: book.title,
+  author: book.author,
+  totalPages: book.total_pages,
+  coverUrl: book.cover_url,
+  startDate: book.start_date,
+  completed: book.completed,
+  createdAt: book.created_at,
+  description: book.description,
+});
 
 export const createBookAction = async (formData: BookFormValues) => {
   const supabase = createServerSupabaseClient();
@@ -130,4 +143,44 @@ export const updateReadingProgressAction = async (
   } catch (error) {
     return { success: false, error: "Failed to update reading progress" };
   }
+};
+
+export const getFilteredBooksAction = async (
+  filter: "all" | "reading" | "completed" = "all",
+  searchQuery: string = "",
+  page: number = 1,
+  pageSize: number = 8
+): Promise<{ books: Book[]; totalCount: number }> => {
+  const supabase = createServerSupabaseClient();
+
+  const safeQuery = searchQuery.replace(/['";\\%]/g, "");
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase.from("books").select("*", { count: "exact" });
+
+  if (filter === "reading") {
+    query = query.eq("completed", false);
+  } else if (filter === "completed") {
+    query = query.eq("completed", true);
+  }
+
+  if (safeQuery.trim()) {
+    query = query.or(`title.ilike.${safeQuery}%,author.ilike.${safeQuery}%`);
+  }
+
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error("Error fetching filtered books:", error);
+    return { books: [], totalCount: 0 };
+  }
+
+  return {
+    books: data.map(transformBookData),
+    totalCount: count || 0,
+  };
 };

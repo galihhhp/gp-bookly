@@ -51,7 +51,7 @@ export const BookCard = ({ book }: BookCardProps) => {
                 ? new Date(book.startDate).toLocaleDateString()
                 : "Not started"}
             </div>
-            {book.completed && <Badge variant="secondary">Completed</Badge>}
+            {book.completed && <Badge>Completed</Badge>}
           </div>
         </div>
       </Card>

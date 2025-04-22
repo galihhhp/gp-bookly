@@ -1,3 +1,4 @@
+import { getFilteredBooksAction } from "@/app/actions/book-actions";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Book } from "@/schema";
 
@@ -14,19 +15,13 @@ const transformBookData = (book: any): Book => ({
   description: book.description,
 });
 
-export const getBooksServer = async (): Promise<Book[]> => {
-  const supabase = createServerSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("books")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw new Error("Failed to fetch books");
-  }
-
-  return data.map(transformBookData);
+export const getBooksServer = async (
+  page: number = 1,
+  pageSize: number = 8,
+  filter: "all" | "reading" | "completed" = "all",
+  search: string = ""
+): Promise<{ books: Book[]; totalCount: number }> => {
+  return getFilteredBooksAction(filter, search, page, pageSize);
 };
 
 export const getBookServer = async (id: string): Promise<Book> => {
