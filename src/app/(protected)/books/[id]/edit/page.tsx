@@ -15,7 +15,7 @@ export default async function EditBookPage({
       <div className="py-8">
         <BookForm
           initialData={book}
-          bookId={params.id}
+          bookId={id}
           description="Update your book details below."
         />
       </div>
