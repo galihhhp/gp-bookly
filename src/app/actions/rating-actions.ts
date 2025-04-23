@@ -47,31 +47,3 @@ export const rateBookAction = async ({ bookId, rating, note }: RatingData) => {
   }
 };
 
-export const getBookRatingAction = async (bookId: string) => {
-  const supabase = createServerSupabaseClient();
-
-  try {
-    const { data, error } = await supabase
-      .from("ratings")
-      .select("*")
-      .eq("book_id", bookId)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    return {
-      success: true,
-      rating: data
-        ? {
-            id: data.id,
-            bookId: data.book_id,
-            rating: data.rating,
-            note: data.note,
-            createdAt: data.created_at,
-          }
-        : null,
-    };
-  } catch (error) {
-    return { success: false, error: "Failed to fetch rating" };
-  }
-};

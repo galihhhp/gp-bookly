@@ -82,13 +82,17 @@ export const useBooksList = (initialBooks: Book[]) => {
   };
 
   useEffect(() => {
-    if (totalBooks === 0) {
-      setTotalBooks(initialBooks.length);
-    }
+    startTransition(async () => {
+      const result = await getFilteredBooksAction(
+        initialFilter,
+        initialSearch,
+        initialPage,
+        pageSize
+      );
 
-    if (initialFilter !== "all" || initialSearch || initialPage > 1) {
-      updateFilters(initialFilter, initialSearch, initialPage);
-    }
+      setBooks(result.books);
+      setTotalBooks(result.totalCount);
+    });
   }, []);
 
   return {

@@ -32,7 +32,7 @@ export default async function BooksPage() {
             ))}
           </div>
         }>
-        <BooksList initialBooks={books} />
+        <BooksList initialBooks={books.books} />
       </Suspense>
     </div>
   );
