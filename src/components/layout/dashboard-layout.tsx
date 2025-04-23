@@ -23,18 +23,32 @@ export const DashboardLayout = ({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background px-4">
         <div className="container mx-auto flex h-16 items-center justify-between py-4">
-          <Link
-            href={ROUTES.ROOT.DASHBOARD}
-            className="flex items-center gap-2">
-            <div className="relative h-8 w-8">
-              <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-lg">
-                B
+          <div className="flex items-center gap-6">
+            <Link
+              href={ROUTES.ROOT.DASHBOARD}
+              className="flex items-center gap-2">
+              <div className="relative h-8 w-8">
+                <div className="absolute inset-0 flex items-center justify-center text-primary font-bold text-lg">
+                  B
+                </div>
               </div>
-            </div>
-            <span className="font-bold text-xl hidden sm:inline-block">
-              Bookly
-            </span>
-          </Link>
+              <span className="font-bold text-xl hidden sm:inline-block">
+                Bookly
+              </span>
+            </Link>
+            <nav className="hidden sm:flex items-center gap-4">
+              <Link
+                href={ROUTES.ROOT.DASHBOARD}
+                className="text-sm font-medium text-muted-foreground hover:text-primary">
+                Dashboard
+              </Link>
+              <Link
+                href={ROUTES.BOOK.LIST}
+                className="text-sm font-medium text-muted-foreground hover:text-primary">
+                My Books
+              </Link>
+            </nav>
+          </div>
 
           <button
             className="sm:hidden"
