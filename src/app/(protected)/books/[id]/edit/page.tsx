@@ -7,7 +7,7 @@ type EditBookPageProps = {
 };
 
 const EditBookPage = async ({ params }: EditBookPageProps) => {
-  const { id } = await params;
+  const { id } = params;
 
   if (!id || typeof id !== "string") return notFound();
 
