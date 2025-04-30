@@ -8,14 +8,18 @@ import { BookDetail } from "@/components/books/book-detail";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/lib/constants/routes";
 
-export default async function BookPage({ params }: { params: { id: string } }) {
+export default async function BookPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   try {
-    const { id } = params;
+    const bookId = (await params).id;
 
-    const book = await getBookServer(id);
-    const progress = await getLatestProgressForBook(id);
-    const rating = await getBookRating(id);
-    const notes = await getBookNotes(id);
+    const book = await getBookServer(bookId);
+    const progress = await getLatestProgressForBook(bookId);
+    const rating = await getBookRating(bookId);
+    const notes = await getBookNotes(bookId);
 
     return (
       <div className="container mx-auto py-8">

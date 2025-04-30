@@ -1,5 +1,7 @@
-import supabase from "@/lib/supabase";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { Book, BookFormValues } from "@/schema";
+
+const supabase = createServerSupabaseClient();
 
 export const getBooks = async (): Promise<Book[]> => {
   const { data, error } = await supabase

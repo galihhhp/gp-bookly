@@ -9,12 +9,12 @@ export const useBooksList = (initialBooks: Book[]) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialFilter = (searchParams.get("filter") || "all") as
+  const initialFilter = (searchParams?.get("filter") || "all") as
     | "all"
     | "reading"
     | "completed";
-  const initialSearch = searchParams.get("search") || "";
-  const initialPage = parseInt(searchParams.get("page") || "1", 10);
+  const initialSearch = searchParams?.get("search") || "";
+  const initialPage = parseInt(searchParams?.get("page") || "1", 10);
 
   const [books, setBooks] = useState<Book[]>(initialBooks);
   const [filter, setFilter] = useState<"all" | "reading" | "completed">(
@@ -59,7 +59,6 @@ export const useBooksList = (initialBooks: Book[]) => {
       );
 
       setBooks(result.books);
-
       setTotalBooks(result.totalCount);
     });
   };
